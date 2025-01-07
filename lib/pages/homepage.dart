@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:todo/pages/add_todo.dart';
-import 'dart:convert';
 
 import 'package:todo/services/todo_service.dart';
+import 'package:todo/utils/snackbar_helper.dart';
+import 'package:todo/widget/todo_card.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -52,30 +52,11 @@ class _HomepageState extends State<Homepage> {
                 itemBuilder: (context, index) {
                   final item = items[index] as Map;
                   final id = item['_id'] as String;
-                  return Card(
-                    child: ListTile(
-                      leading: CircleAvatar(child: Text('${index + 1}')),
-                      title: Text(item['title']),
-                      subtitle: Text(item['description']),
-                      trailing: PopupMenuButton(onSelected: (value) {
-                        if (value == 'edit') {
-                          navigateToEditPage(item);
-                        } else if (value == 'delete') {
-                          deleteById(id);
-                        } else {}
-                      }, itemBuilder: (context) {
-                        return [
-                          PopupMenuItem(
-                            child: Text('Edit'),
-                            value: 'edit',
-                          ),
-                          PopupMenuItem(
-                            child: Text('Delete'),
-                            value: 'delete',
-                          )
-                        ];
-                      }),
-                    ),
+                  return TodoCard(
+                    index: index,
+                    deleteById: deleteById,
+                    navigateToEditPage: navigateToEditPage,
+                    item: item,
                   );
                 }),
           ),
@@ -111,48 +92,31 @@ class _HomepageState extends State<Homepage> {
   }
 
   Future<void> deleteById(String id) async {
-   
-    final success = await TodoService.deleteById(id) ;
+    final success = await TodoService.deleteById(id);
 
     if (success == 200) {
       final filtered = items.where((element) => element['_id'] != id).toList();
       setState(() {
         items = filtered;
+        showSuccessMessage(context, message: 'Data Was Deleted Successful');
       });
     } else {
-      showErrorMessage('Deletion field');
+      showErrorMessage(context, message: 'Deletion field');
     }
   }
 
   Future<void> fetchTodo() async {
-    final url = 'https://api.nstack.in/v1/todos?page=1&limit=10';
-    final uri = Uri.parse(url);
-    final response = await http.get(uri);
-
-    if (response.statusCode == 200) {
-      final json = jsonDecode(response.body) as Map;
-      final result = json['items'] as List;
+    final response = await TodoService.fetchTodo();
+    if (response != null) {
       setState(() {
-        items = result;
+        items = response;
       });
+    } else {
+      showErrorMessage(context, message: 'something went wrong');
     }
 
     setState(() {
       isLoading = false;
     });
-    print(response.body);
-  }
-
-  void showErrorMessage(String message) {
-    final snackBar = SnackBar(
-      content: Text(
-        message,
-        style: TextStyle(
-          color: Colors.white,
-        ),
-      ),
-      backgroundColor: Colors.red,
-    );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

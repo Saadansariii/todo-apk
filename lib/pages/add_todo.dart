@@ -1,6 +1,6 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:todo/services/todo_service.dart';
+import 'package:todo/utils/snackbar_helper.dart';
 
 class AddTodo extends StatefulWidget {
   final Map? todo;
@@ -17,7 +17,6 @@ class _AddTodoState extends State<AddTodo> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     final todo = widget.todo;
     if (widget.todo != null) {
@@ -77,35 +76,12 @@ class _AddTodoState extends State<AddTodo> {
 
     final url = 'https://api.nstack.in/v1/todos/$id';
     final uri = Uri.parse(url);
-    final response = await http.put(
-      uri,
-      body: jsonEncode(body),
-      headers: {'Content-Type': 'application/json'},
-    );
+    final isSuccess = await TodoService.updateData(id, body);
 
-    void showSuccessMessage(String message) {
-      final snackBar = SnackBar(content: Text(message));
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    }
-
-    void showErrorMessage(String message) {
-      final snackBar = SnackBar(
-        content: Text(
-          message,
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Colors.red,
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    }
-
-    if (response.statusCode == 200) {
-      showSuccessMessage('Todo Update successfully!');
-      print(response.body);
+    if (isSuccess) {
+      showSuccessMessage(context, message: 'Todo Update successfully!');
     } else {
-      showErrorMessage('Failed to update Todo.');
+      showErrorMessage(context, message: 'Failed to update Todo.');
     }
   }
 
@@ -120,37 +96,17 @@ class _AddTodoState extends State<AddTodo> {
 
     final url = 'https://api.nstack.in/v1/todos';
     final uri = Uri.parse(url);
-    final response = await http.post(
-      uri,
-      body: jsonEncode(body),
-      headers: {'Content-Type': 'application/json'},
-    );
+    final isSuccess = await TodoService.createTodo(body);
 
-    void showSuccessMessage(String message) {
-      final snackBar = SnackBar(content: Text(message));
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    }
-
-    void showErrorMessage(String message) {
-      final snackBar = SnackBar(
-        content: Text(
-          message,
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Colors.red,
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    }
-
-    if (response.statusCode == 201) {
+    if (isSuccess) {
       titleController.text = '';
       descriptionController.text = '';
-      showSuccessMessage('Todo added successfully!');
-      print(response.body);
+      showSuccessMessage(context, message: 'New Todo Created');
     } else {
-      showErrorMessage('Failed to add Todo.');
+      showErrorMessage(context, message: 'something is missing');
     }
   }
+
+
+  
 }
