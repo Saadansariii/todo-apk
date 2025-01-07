@@ -94,14 +94,14 @@ class _HomepageState extends State<Homepage> {
   Future<void> deleteById(String id) async {
     final success = await TodoService.deleteById(id);
 
-    if (success == 200) {
+    if (success) {
       final filtered = items.where((element) => element['_id'] != id).toList();
       setState(() {
         items = filtered;
-        showSuccessMessage(context, message: 'Data Was Deleted Successful');
       });
+      showSuccessMessage(context, message: 'Todo Was Deleted Successful');
     } else {
-      showErrorMessage(context, message: 'Deletion field');
+      showErrorMessage(context, message: 'Deletion filed');
     }
   }
 
